@@ -220,3 +220,42 @@ fn string_test() {
         assert!(word.starts_with("v"));
     }
 }
+
+#[test]
+fn ownership_test() {
+    let mut v = Vec::new();
+    for i in 101..106 {
+        v.push(i.to_string());
+    }
+
+    let fifth = v.pop().unwrap();
+    assert_eq!(fifth, "105");
+
+    let second = v.swap_remove(1);
+    assert_eq!(second, "102");
+
+    let third = std::mem::replace(&mut v[2], "substitute".to_string());
+    assert_eq!(third, "103");
+
+    assert_eq!(v, vec!["101", "104", "substitute"]);
+
+    struct Person {
+        name: Option<String>,
+        birth: Option<i32>,
+    }
+
+    let mut composers = Vec::new();
+    composers.push(Person {
+        name: Some("Palestrina".to_string()),
+        birth: Some(1525),
+    });
+
+    // let first_name = composers[0].name // error
+
+    let first_name = std::mem::replace(&mut composers[0].name, None);
+    assert_eq!(first_name, Some("Palestrina".to_string()));
+    assert_eq!(composers[0].name, None);
+    let birth = composers[0].birth.take();
+    assert_eq!(birth, Some(1525));
+    assert_eq!(composers[0].birth, None);
+}

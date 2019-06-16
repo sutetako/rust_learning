@@ -2,6 +2,6 @@
 name = "rust_learning"
 version = "0.1.0"
 authors = ["Moto Endo <endo.moto.biz@gmail.com"]
-edition = "2019"
+edition = "2018"
 
 [dependencies]

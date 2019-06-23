@@ -199,7 +199,7 @@ fn string_test() {
     assert_eq!(poodles.chars().count(), 3);
 
     // let mut s = "hello";
-    // s[0] = 'c'; error: tye thpe 'str' cannnot be mutably indexed
+    // s[0] = 'c'; error: tye thpe 'str' cannot be mutably indexed
     // s.push('\n'); error: no method named `push` found for type `&str`
 
     assert_eq!(
@@ -242,7 +242,7 @@ fn ownership_test() {
     struct Person {
         name: Option<String>,
         birth: Option<i32>,
-    }
+    };
 
     let mut composers = Vec::new();
     composers.push(Person {
@@ -258,4 +258,307 @@ fn ownership_test() {
     let birth = composers[0].birth.take();
     assert_eq!(birth, Some(1525));
     assert_eq!(composers[0].birth, None);
+}
+
+#[test]
+fn copy_test() {
+    {
+        /*
+        struct Label {
+            number: u32,
+        }
+
+        fn print(l: Label) {
+            println!("STAMP: {}", l.number);
+        }
+        let l = Label { number: 3 };
+        print(l);
+        println!("My label number is: {}", l.number); // error
+        */
+
+        #[derive(Copy, Clone)]
+        struct Label {
+            number: u32,
+        }
+
+        fn print(l: Label) {
+            println!("STAMP: {}", l.number);
+        }
+        let l = Label { number: 3 };
+        print(l);
+        println!("My label number is: {}", l.number);
+
+        /*
+        #[derive(Copy, Clone)]
+        struct StringLabel {
+            name: String,
+        }
+        */
+    }
+}
+
+#[test]
+fn rc_test() {
+    use std::rc::Rc;
+
+    let s: Rc<String> = Rc::new("shirataki".to_string());
+    let t: Rc<String> = s.clone();
+    let u: Rc<String> = s.clone();
+
+    assert!(s.contains("shira"));
+    assert_eq!(t.find("taki"), Some(5));
+    println!("{} are quite chewy, almost bouncy, but lack flavor", u);
+
+    // s.push_str(" noodles"); // error
+}
+
+#[test]
+fn reference_test() {
+    use std::collections::HashMap;
+    type Table = HashMap<String, Vec<String>>;
+    let mut table = Table::new();
+    table.insert(
+        "Gesualdo".to_string(),
+        vec![
+            "many madrigals".to_string(),
+            "Tenebrae Responsoria".to_string(),
+        ],
+    );
+    table.insert(
+        "Caravaggio".to_string(),
+        vec![
+            "The Musicians".to_string(),
+            "The Calling of St. Matthew".to_string(),
+        ],
+    );
+    table.insert(
+        "Cellini".to_string(),
+        vec![
+            "Perseus with the head of Medusa".to_string(),
+            "a salt cellar".to_string(),
+        ],
+    );
+
+    fn show(table: Table) {
+        for (artist, works) in table {
+            println!("works by {}", artist);
+            for work in works {
+                println!("  {}", work);
+            }
+        }
+    }
+    fn show_with_ref(table: &Table) {
+        for (artist, works) in table {
+            println!("works by {}", artist);
+            for work in works {
+                println!("  {}", work);
+            }
+        }
+    }
+
+    fn sort_works(table: &mut Table) {
+        for (_artist, works) in table {
+            works.sort();
+        }
+    }
+    show_with_ref(&table);
+    assert_eq!(table["Gesualdo"][0], "many madrigals"); // OK
+    sort_works(&mut table);
+    assert_eq!(table["Gesualdo"][1], "many madrigals"); // OK
+    show(table);
+    // assert_eq!(table["Cellini"][0], "a salt cellar"); // error, use of moved value
+
+    // implicitily borrows
+    struct Anime {
+        name: &'static str,
+        bechdel_pass: bool,
+    };
+    let aria = Anime {
+        name: "Aria: The Animation",
+        bechdel_pass: true,
+    };
+    let anime_ref = &aria;
+    assert_eq!(anime_ref.name, "Aria: The Animation");
+    assert_eq!((*anime_ref).name, "Aria: The Animation");
+    assert_eq!((*anime_ref).bechdel_pass, true);
+
+    let mut v = vec![1973, 1968];
+    v.sort();
+    (&mut v).sort();
+
+    let mut x = 10;
+    let mut y = 20;
+    let mut r = &x;
+    let b = true;
+
+    if b {
+        r = &y;
+    }
+
+    assert!(*r == 20);
+
+    struct Point {
+        x: i32,
+        y: i32,
+    }
+    let point = Point { x: 1000, y: 729 };
+    let r: &Point = &point;
+    let rr: &&Point = &r;
+    let rrr: &&&Point = &rr;
+    assert_eq!(rrr.x, 1000);
+    assert_eq!(rrr.y, 729);
+
+    x = 10;
+    y = 10;
+
+    let rx = &x;
+    let ry = &y;
+
+    let rrx = &rx;
+    let rry = &ry;
+    // assert!(rrx <= rry);
+    assert!(rrx == rry);
+    assert!(!std::ptr::eq(rrx, rry));
+    fn factorial(n: usize) -> usize {
+        (1..n + 1).fold(1, |a, b| a * b)
+    }
+    let f = &factorial(6);
+    assert_eq!(f + &1009, 1729);
+
+    {
+        let r;
+        {
+            let x = 1;
+            r = &x;
+            assert_eq!(*r, 1); // OK
+        }
+        // assert_eq!(*r, 1); // error;
+    }
+
+    static mut STASH: &i32 = &128;
+    // fn test_func(p: &i32) { // error
+    // fn test_func<'a>(p: &'a &i32) { // error too, this is the same as the above definition
+    fn test_func(p: &'static i32) {
+        // OK
+        unsafe {
+            STASH = p;
+        }
+    }
+
+    static WORTH_POINTING_AT: i32 = 1000;
+    test_func(&WORTH_POINTING_AT);
+    unsafe {
+        assert_eq!(STASH, &1000);
+    }
+    fn smallest(v: &[i32]) -> &i32 {
+        let mut s = &v[0];
+        for r in &v[1..] {
+            if *r < *s {
+                s = r;
+            }
+        }
+        s
+    }
+    {
+        let parabola = [9, 4, 1, 0, 1, 4, 9];
+        let s = smallest(&parabola);
+        assert_eq!(*s, 0);
+    }
+
+    /*
+    struct S {
+        r: &i32,
+    }
+
+    let s;
+    {
+        let x = 10;
+        s = S { r: &x };
+    }
+    */
+    // assert_eq!(*s, 10); // error
+
+    /*
+    struct S<'a, 'b> {
+        x: &'a i32,
+        y: &'b i32,
+    }
+
+    // fn sum_r_xy<'a, 'b, 'c>(r: &'a &i32, s: S<'b, 'c>) -> i32 {
+    fn sum_r_xy(r: &i32, s: S) -> i32 {
+        r + s.x + s.y
+    }
+    // fn first_third<'a>(point: &'a &[i32; 3]) -> (&'a i32, &'a i32) {
+    fn first_third(point: &[i32; 3]) -> (&i32, &i32) {
+        (&point[0], &point[2])
+    }
+
+    struct StringTable {
+        elements: Vec<String>,
+    }
+
+    impl StringTable {
+        // fn find_by_prefix<'a, 'b>(&'a self, prefix: &'b str) -> Option<&'a String> {
+        fn find_by_prefix(&self, prefix: &str) -> Option<&String> {
+            for i in 0..self.elements.len() {
+                if self.elements[i].starts_with(prefix) {
+                    return Some(&self.elements[i]);
+                }
+            }
+            None
+        }
+    }
+    */
+
+    {
+        /*
+        let v = vec![4, 8, 19, 27, 34, 10];
+        let r = &v;
+        let aside = v;
+        r[0]; // error
+        */
+        let v = vec![4, 8, 19, 27, 34, 10];
+        {
+            let r = &v;
+            r[0];
+        }
+        let aside = v;
+        assert_eq!(aside[0], 4);
+    }
+    {
+        fn extend(vec: &mut Vec<f64>, slice: &[f64]) {
+            for elt in slice {
+                vec.push(*elt);
+            }
+        }
+        let mut wave = Vec::new();
+        let head = vec![0.0, 1.0];
+        let tail = [0.0, -1.0];
+
+        extend(&mut wave, &head);
+        extend(&mut wave, &tail);
+
+        assert_eq!(wave, vec![0.0, 1.0, 0.0, -1.0]);
+
+        // extend(&mut wave, &wave); // error
+    }
+    {
+        let mut x = 10;
+        {
+            let r1 = &x;
+            let r2 = &x;
+            assert_eq!(r1, r2);
+            // x += 10; // error, it is borrowed
+        }
+        x += 10;
+        assert_eq!(x, 20);
+
+        // let m = &mut x; // error, it is also borrowed as immutable
+
+        let mut y = 20;
+        let m1 = &mut y;
+        // let m2 = &mut y; // error, cannot borrow as mutable more than once
+        // let z = y; // error, cannot use 'y' because it was mutably borrowed
+        assert_eq!(&20, m1);
+    }
 }

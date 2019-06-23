@@ -1,22 +1,4 @@
-fn main() {
-    let v1 = build_vector();
-    let v2 = build_vector_2();
-    assert_eq!(v1, v2);
-}
-
-fn build_vector() -> Vec<i16> {
-    let mut v: Vec<i16> = Vec::<i16>::new();
-    v.push(10i16);
-    v.push(20i16);
-    v
-}
-
-fn build_vector_2() -> Vec<i16> {
-    let mut v = Vec::new();
-    v.push(10);
-    v.push(20);
-    v
-}
+fn main() {}
 
 #[test]
 fn overflow() {
@@ -78,6 +60,24 @@ fn array_test() {
 
 #[test]
 fn vector_test() {
+    {
+        fn build_vector() -> Vec<i16> {
+            let mut v: Vec<i16> = Vec::<i16>::new();
+            v.push(10i16);
+            v.push(20i16);
+            v
+        }
+
+        fn build_vector_2() -> Vec<i16> {
+            let mut v = Vec::new();
+            v.push(10);
+            v.push(20);
+            v
+        }
+        let v1 = build_vector();
+        let v2 = build_vector_2();
+        assert_eq!(v1, v2);
+    }
     let mut v1 = vec![2, 3, 5, 7];
     assert_eq!(v1.iter().fold(1, |a, b| a * b), 210);
 

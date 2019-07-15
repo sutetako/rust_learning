@@ -560,5 +560,388 @@ fn reference_test() {
         // let m2 = &mut y; // error, cannot borrow as mutable more than once
         // let z = y; // error, cannot use 'y' because it was mutably borrowed
         assert_eq!(&20, m1);
+
+        {
+            let mut w = (107, 109);
+            w.0 = 108;
+            let r = &w;
+            let r0 = &r.0;
+            // let m1 = &mut r.1; // error: can't reborrow shared as mutable
+
+            assert_eq!(r0, &108);
+            assert_eq!(w, (108, 109));
+        }
     }
+}
+
+#[test]
+fn test_expression() {
+    // 6.1
+    // expression
+    // 5 * (fahr-32) / 9;
+
+    /* statement
+     for (; begin != end; ++begin) {
+        if (*begin == target)
+            break;
+     }
+    */
+    /*
+     pixels[r * bounds.0 + c] =
+        match escapes(Complex { re: point.0, im: point.1 }, 255) {
+            None => 0,
+            Some(count) => 255 - count as u8
+        };
+    */
+    /*
+     let status =
+        if cpu.temperature <= MAX_TEMP {
+            HttpStatus::Ok
+        } else {
+            HttpStatus::ServerError
+        };
+    */
+    /*
+     println!("Inside the vat, you see {}.",
+        match vat.contents {
+            Some(brain) => brain.desc(),
+            None => "nothing of interest"
+        });
+    */
+    // 6.2
+    /*
+     let display_name = match post.author() {
+        Some(author) => author.name(),
+        None => {
+            let network_info = post.get_network_metadata()?;
+            let ip = network_info.client_address();
+            ip.to_string()
+        }
+     };
+    */
+    /*
+     let msg = {
+        // let-declaration: semicolon is always required
+        let dandelion_control = puffball.open();
+
+        // expression + semicolon: method is called, return value dropped
+        dandelion_control.release_all_seeds(launch_codes);
+
+        // expression with no semicolon: method is called,
+        // return value stored in `msg`
+        dandelion_control.get_status()
+     }
+    */
+
+    // 6.3
+    /*
+     loop {
+         work();
+         play();
+         ;  // <-- empty statement
+     }
+    */
+
+    /*
+     * let name: type = expr;
+     */
+
+    /*
+    let name;
+    if user.has_nickname() {
+       name = user.nickname();
+    } else {
+       name = generate_unique_name();
+       user.register(&name);
+    }
+    */
+
+    /*
+    use std::io;
+    use std::cmp::Ordering;
+    fn show_files() -> io::Result<()> {
+       let mut v = vec![];
+       ...
+       fn cmp_by_timestamp_then_name(a: &FileInfo, b: &FileInfo) -> Ordering {
+           a.timestamp.cmp(&b.timestamp)
+               .reverse()
+               .then(a.path.cmp(&b.path))
+       }
+       v.sort_by(cmp_by_timestamp_then_name);
+    }
+    */
+
+    // 6.4
+    /*
+    if condition1 {
+       block1
+    } else if condition2 {
+       block2
+    } else {
+       block_n
+    }
+    */
+
+    /*
+     match value {
+        pattern => expr,
+        ...
+     }
+    */
+    let code = 2;
+    match code {
+        0 => println!("OK"),
+        1 => println!("Wires Tangled"),
+        2 => println!("User Asleep"),
+        _ => println!("Unrecognized Error {}", code),
+    }
+
+    /*
+    match params.get("name") {
+        Some(name) => println!("Hello, {}!", name),
+        None => println!("Greetings, stranger.")
+    }
+    */
+
+    /*
+     let score = match card.rank {
+        Jack => 10,
+        Queen = > 10,
+        Ace = 11
+     }; // error: nonexhaustive patterns
+    */
+
+    /*
+     let suggested_pet =
+        if with_wings { Pet::Buzzard } else { Pet::Hyena }; //ok
+
+     let favorite_number =
+        if user.is_hobbit() { "eleventy-one" } else { 9 }; //error
+
+     let best_sports_team =
+        if is_hockey_season() { "Predators" }; // error
+    */
+
+    /*
+    let suggested_per =
+        match favotites.elements {
+            Fire => Pet::RedPanda,
+            Air => Pet::Buffalo,
+            Water => Pet::Orca,
+            _ => None // error: incompatible types
+        }
+    */
+
+    // 6.4.1
+    /*
+     if let pattern = expr {
+         block1
+     } else {
+         block2
+     }
+
+     match expr {
+        pattern => { block1 }
+        _ => { block2 }
+    */
+
+    /*
+    if let Some(cookie) = request.session_cookie {
+       return restore_session(cookie);
+    }
+
+    if let Err(err) = present_cheesy_anti_robot_task() {
+       log_robot_attempt(err);
+       politely_accuse_user_of_being_a_robot();
+    } else {
+       session.mark_as_human();
+    }
+    */
+
+    // 6.5 loop
+    /*
+    while condition {
+        block
+    }
+
+    while let pattern = expr {
+        block
+    }
+
+    loop {
+        block
+    }
+
+    for pattern in collection {
+        block
+    }
+    */
+
+    for i in 0..20 {
+        println!("{}", i);
+    }
+
+    /*
+    let strings: Vec<String> = error_messages();
+    for s in strings { // each String is moved into s here
+        println!("{}", s);
+    } // ...and dropped here
+    println("{} error(s)", strings.len()); // error: use of moved value
+    */
+
+    /*
+    for rs in &strings {
+        println!("String {:?} is at address {:p}.", *rs, rs); // ok
+    }
+    */
+
+    /*
+    for rs in &mut strings { // tye type of rs is &mut String
+        rs.push('\n'); // add a newline to each string
+    }
+    */
+
+    /*
+
+    for line in input_lines {
+        let trimmed = trim_comments_and_whitespac(line);
+        if trimmed.is_empty() {
+            continue;
+        }
+        ...
+    }
+    */
+    /*
+    'seach:
+    for room in apartment {
+        for stop in room.hiding_spots() {
+            if spot.contains(keys) {
+                println!("Your keys are {} in the {}.", spot, room);
+                break 'search;
+            }
+        }
+    }
+    */
+
+    // 6.6 return
+    fn f() {
+        // return type omitted: default to ()
+        return; // return value comitted: default to ()
+    }
+    assert_eq!(f(), ());
+
+    /*
+    let output = File::create(filename)?;
+
+    let output = match File::create(filename) {
+        Ok(f) => f,
+        Err(err) => return Err(err)
+    };
+
+    */
+
+    // 6.7
+
+    /*
+    fn wait_for_process(process: &mut Process) -> i32 {
+        while true {
+            if process.wait() {
+                return process.exit_code();
+            }
+        }
+    } // error: not all control paths return a value
+    */
+
+    /*
+    fn serve_forever(socket: ServerSocket, handler: ServerHandler) -> ! {
+        socket.listen();
+        loop {
+            let s = socket.accept();
+            handler.handle(s);
+        }
+    }
+    */
+
+    // 6.8
+
+    /*
+    let x = gcd(1302, 462); // function call
+    let room = player.location(); // method call
+    let mut numbers = Vec::new(); // static method call
+
+    Iron::new(router).http("localhost:3000").unwrap();
+
+    return Vec<i32>::with_capacity(1000); // error: something about chanined comparisons
+    let ramp = (0 .. n).collect<Vec<i32>>(); // same error
+    return Vec::<i32>::with_capacity(1000); // ok, using ::<
+    let ramp = (0 .. n).collect::<Vec<i32>>(); // ok, using ::<
+    return Vec::with_capacity(10); // ok, if the fn return type is Vec<i32>
+    let ramp: Vec<i32> = (0 .. n).collect(); // ok, variable's type is given
+    */
+
+    // 6.9
+
+    /*
+    game.black_pawns // struct field
+    coords.1         // tuple element
+    pieces[i]        // array element, they are lvalue
+
+    fn quicksort<T: Ord>(slice: &mut [T]) {
+        if slice.len() <= 1 {
+            return; // Nothing to sort.
+        }
+
+        // Partition the slice into two parts, front and back.
+        let pivot_index = partition(slice);
+
+        // Recursively sort the front half of `slice`.
+        quicksort(&mut slice[.. pivot_index]);
+
+        // And the back half.
+        quicksort(&mut slice[pivot_index + 1 ..]);
+    }
+    */
+
+    // 6.10
+
+    /*
+    let padovan: Vec<u64> = compute_padovan_sequence(n);
+    for elem in &padovan {
+        draw_triangle(turtle, *elem);
+    }
+    */
+
+    // 6.11
+    /*
+
+       println!("{}", -100);     // -100
+       println!("{}", -100u32);  // error: can't apply unary '-' to type 'u32'
+       println!("{}", +100);     // error: expected expression, found '+'
+
+       let x = 1234.567 % 10.0;  // approximetely 4.567
+
+       let hi: u8 = 0xe0;
+       let lo = !hi; // 0x1f
+    */
+
+    // 6.12
+    /*
+    total += item.price;
+    // rust does not have increment operator and decrement operator.
+    */
+
+    // 6.13
+    /*
+    let x = 17;             // x is type i32
+    let index = x as usize; // convert to usize
+    */
+
+    // 6.14
+    /*
+    let is_even = |x| x % 2 == 0;
+
+    let is_evan = |x: u64| -> bool x % 2 == 0; // error
+    */
+    let is_even = |x: u64| -> bool { x % 2 == 0 }; // ok
+    assert_eq!(is_even(14), true);
 }

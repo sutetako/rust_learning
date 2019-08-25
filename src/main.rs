@@ -945,3 +945,131 @@ fn test_expression() {
     let is_even = |x: u64| -> bool { x % 2 == 0 }; // ok
     assert_eq!(is_even(14), true);
 }
+
+#[test]
+fn error_test() {
+    // 7.1.1
+    fn pirate_share(total: u64, crew_size: usize) -> u64 {
+        let half = total / 2;
+        half / crew_size as u64
+    }
+    pirate_share(100, 0);
+
+    // 7.2 Result
+    // fn get_weather(location: LatLng) -> Result<WeatherReport, io::Error>
+
+    // 7.2.1
+    // match get_weather(hometown) {
+    //     Ok(report) => {
+    //         display_weather(hometown, &report);
+    //     }
+    //     Err(err) => {
+    //         println!("error querying the weather: {}", err);
+    //         schedule_weather_retry();
+    //     }
+    // }
+    // A fairly safe prediction for Southern California.
+    // const THE_USEAL: WeatherReport = WeatherReport::Sunny(72);
+    //
+    // result.is_ok()
+    // result.is_err()
+    //
+    // result.ok()
+    // result.err()
+    //
+    // Get a real weather report, if possible.
+    // If not, fail back on the usual.
+    // let report = get_weather(los_angels).unwrap_or(THE_USEAL);
+    // display_weather(los_angels, &report);
+    //
+    // let report =
+    //    get_weather(hometown)
+    //    .unwrap_or_else(|_err| vague_prediction(hometown));
+    //
+    // result.unwrap()
+    // result.expect(message)
+    // result.as_ref()
+    // result.as_mut()
+    //
+    // 7.2.2
+    // fn remove_file(path: &Path) -> Result<()>
+    // pub type Result<T> = result::Result<T, Error>;
+    //
+    // 7.2.3
+    // println!("error querying the weather: {}", err);
+    // println!("error: {}", err);
+    // println!("error: {:?}", err);
+    // err.description()
+    // err.cause()
+    // use std::error::Error;
+    // use std::io::{stderr, Write};
+
+    // /// Dump an error message to `stderr`.
+    // ///
+    // /// If another error happens while building the error message or
+    // /// writing to `stderr`, it is ignored.
+
+    // fn print_error(mut err: &Error) {
+    //     let _ = writeln!(stderr(), "error: {}", err);
+    //     while let Some(cause) = err.cause() {
+    //         let _ = writeln!(stderr(), "caused by: {}", cause);
+    //         err = cause;
+    //     }
+    // }
+    //
+    // 7.2.4
+    //
+    // let weather = get_weather(hometown)?;
+    //
+    // let weather = match get_weather(hometown) {
+    //    Ok(success_value) => success_value,
+    //    Err(err) = > return Err(err)
+    // };
+    //
+    // use std::fs;
+    // use std::io;
+    // use std::path::Path;
+    //
+    // fn move_all(src: &Path, dst: &Path) -> io::Result<()> {
+    //    for entry_result in src.read_dir()? { // opening dir could fail
+    //        let entry = entry_result?;        // reading dir could fail
+    //        let dst_file = dst.join(entry.file_name());
+    //        fs::rename(entry.path(), dst_file)?; // renaming could fail
+    //    }
+    //    Ok(())
+    // }
+    //
+    // 7.2.5
+    //
+    // use std::io::{self, BufRead};
+    //
+    // /// Read integers from a text file.
+    // /// The file sould have one number on each line.
+    // fn read_numbers(file: &mut BufRead) -> Result<Vec<i64>, io::Error> {
+    //    let mut numbers = vec![];
+    //    for line_result in file.lines() {
+    //        let line = line_result?;      // reading lines can fail
+    //        numbers.push(line.parse()?);  // parsing integers can fail
+    //    }
+    //    Ok(numbers)
+    // }
+    //
+    // type GenError = Box<std::error:Error>;
+    // type GenResult<T> = Result<T, GenError>;
+    //
+    // let io_error = io::Error::new{           // make our own io::Error
+    //     io::ErrorKind::Other, "timed out"};
+    // return Err(GenError::from(io_error));    // manually convert to GenError
+    //
+    // 7.2.7
+    // let _ = writeln!(stderr(), "error: {}", err);
+    //
+    // 7.2.8
+    //
+    // fn main() {
+    //    if let Err(err) = calculate_tides() {
+    //        print_error(&err);
+    //        std::process::exit(1);
+    //    }
+    // }
+}

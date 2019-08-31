@@ -949,11 +949,11 @@ fn test_expression() {
 #[test]
 fn error_test() {
     // 7.1.1
-    fn pirate_share(total: u64, crew_size: usize) -> u64 {
-        let half = total / 2;
-        half / crew_size as u64
-    }
-    pirate_share(100, 0);
+    // fn pirate_share(total: u64, crew_size: usize) -> u64 {
+    //     let half = total / 2;
+    //     half / crew_size as u64
+    // }
+    // pirate_share(100, 0);
 
     // 7.2 Result
     // fn get_weather(location: LatLng) -> Result<WeatherReport, io::Error>
@@ -1072,4 +1072,737 @@ fn error_test() {
     //        std::process::exit(1);
     //    }
     // }
+}
+
+#[test]
+fn struct_test() {
+    // 9.1
+    /// A rectangle of eight-bit grayscale pixels
+    struct GrayscaleMap {
+        pixels: Vec<u8>,
+        size: (usize, usize),
+    }
+
+    let width = 1024;
+    let height = 576;
+    // let image = GrayscaleMap {
+    //     pixels: vec![0; width * height],
+    //     size: (width, height),
+    // };
+
+    fn new_map(size: (usize, usize), pixels: Vec<u8>) -> GrayscaleMap {
+        assert_eq!(pixels.len(), size.0 * size.1);
+        GrayscaleMap { pixels, size }
+    }
+    let image = new_map((width, height), vec![0; width * height]);
+
+    assert_eq!(image.size, (1024, 576));
+    assert_eq!(image.pixels.len(), 1024 * 576);
+
+    // pub struct GrayscaleMap {
+    //     pub pixels: Vec<u8>,
+    //     pub size: (usize, usize)
+    // }
+
+    // pub struct GrayscaleMap {
+    //     pixels: Vec<u8>,
+    //     size: (usize, usize)
+    // }
+    //
+
+    struct Broom {
+        name: String,
+        height: u32,
+        health: u32,
+        position: (f32, f32, f32),
+        intent: BroomIntent,
+    }
+
+    /// Two possitble alternatives for what a ~Broom` could be working on.
+    #[derive(Copy, Clone)]
+    enum BroomIntent {
+        FetchWater,
+        DumpWater,
+    }
+
+    // Receive the input Broom by value, taking ownership.
+    fn chop(b: Broom) -> (Broom, Broom) {
+        // Initialize `broom1` mostly from `b`, changing only `height`, Since
+        // `String` is not `Copy`, `broom1` takes ownership of `b`'s name.
+        let mut broom1 = Broom {
+            height: b.height / 2,
+            ..b
+        };
+
+        // Initialize `broom2` mostly from `broom1`. Since `String` is not
+        // `Copy`, we must clone `name` explicitly.
+        let mut broom2 = Broom {
+            name: broom1.name.clone(),
+            ..broom1
+        };
+
+        broom1.name.push_str(" I");
+        broom2.name.push_str(" II");
+
+        (broom1, broom2)
+    }
+
+    let hokey = Broom {
+        name: "Hokey".to_string(),
+        height: 60,
+        health: 100,
+        position: (100.0, 200.0, 0.0),
+        intent: BroomIntent::FetchWater,
+    };
+
+    let (hokey1, hokey2) = chop(hokey);
+    assert_eq!(hokey1.name, "Hokey I");
+    assert_eq!(hokey1.health, 100);
+
+    assert_eq!(hokey2.name, "Hokey II");
+    assert_eq!(hokey2.health, 100);
+
+    // 9.2
+    struct Bounds(usize, usize);
+
+    let image_bounds = Bounds(1024, 768);
+    assert_eq!(image_bounds.0 * image_bounds.1, 786432);
+
+    // pub struct Bounds(pub usize, pub usize);
+
+    // 9.3
+    // struct Onesuch;
+    // let o = Onesuch;
+
+    // 9.4
+    // 9.5
+
+    /// A first-in, first-out queue of characters.
+    pub struct Queue {
+        older: Vec<char>,   // older elements, eldest last.
+        younger: Vec<char>, // younger elements, youngest last.
+    }
+
+    impl Queue {
+        /// Push a character onto the back of a queue.
+        pub fn push(&mut self, c: char) {
+            self.younger.push(c);
+        }
+
+        /// Pop a character off the front of a queue. Return `Some(c)` if there
+        /// was a character to pop, or `None` if the queue was empty.
+        pub fn pop(&mut self) -> Option<char> {
+            if self.older.is_empty() {
+                if self.younger.is_empty() {
+                    return None;
+                }
+
+                // Bring the elements in younger over to older, and put them in
+                // the promised order.
+                use std::mem::swap;
+                swap(&mut self.older, &mut self.younger);
+                self.older.reverse();
+            }
+
+            // Now older is guaranteed to have something,. Vec's pop method
+            // already returns an Option, so we're set.
+            self.older.pop()
+        }
+
+        pub fn is_empty(&self) -> bool {
+            self.older.is_empty() && self.younger.is_empty()
+        }
+
+        pub fn split(self) -> (Vec<char>, Vec<char>) {
+            (self.older, self.younger)
+        }
+
+        pub fn new() -> Queue {
+            Queue {
+                older: Vec::new(),
+                younger: Vec::new(),
+            }
+        }
+    }
+
+    let mut q = Queue::new();
+    // let mut q = Queue {
+    //     older: Vec::new(),
+    //     younger: Vec::new(),
+    // };
+
+    q.push('0');
+    q.push('1');
+    assert_eq!(q.pop(), Some('0'));
+
+    q.push('∞');
+    assert_eq!(q.pop(), Some('1'));
+    assert_eq!(q.pop(), Some('∞'));
+    assert_eq!(q.pop(), None);
+
+    assert!(q.is_empty());
+    q.push('⦿');
+    assert!(!q.is_empty());
+    q.pop();
+
+    q.push('P');
+    q.push('D');
+    assert_eq!(q.pop(), Some('P'));
+    q.push('X');
+
+    let (older, younger) = q.split();
+    // q is now uninitialized.
+    assert_eq!(older, vec!['D']);
+    assert_eq!(younger, vec!['X']);
+
+    // 9.6
+
+    pub struct QueueT<T> {
+        older: Vec<T>,
+        younger: Vec<T>,
+    }
+
+    impl<T> QueueT<T> {
+        pub fn new() -> Self {
+            QueueT {
+                older: Vec::new(),
+                younger: Vec::new(),
+            }
+        }
+
+        pub fn push(&mut self, t: T) {
+            self.younger.push(t);
+        }
+
+        pub fn is_empty(&self) -> bool {
+            self.older.is_empty() && self.younger.is_empty()
+        }
+    }
+
+    // let mut qt = QueueT::<char>::new();
+
+    let mut qt = QueueT::new();
+    let mut rt = QueueT::new();
+
+    qt.push("CAD"); // apparently a Queue<&'static str>
+    rt.push(0.74); // apparently a Queue<f64>
+
+    qt.push("BTC"); // Bitcoins per USD, 2017-5
+    rt.push(2737.7); // Rust fails to detect ittational exuberance
+
+    // 9.7
+
+    struct Extrema<'elt> {
+        greatest: &'elt i32,
+        least: &'elt i32,
+    }
+
+    fn find_extrema<'s>(slice: &'s [i32]) -> Extrema<'s> {
+        let mut greatest = &slice[0];
+        let mut least = &slice[0];
+
+        for i in 1..slice.len() {
+            if slice[i] < *least {
+                least = &slice[i];
+            }
+            if slice[i] > *greatest {
+                greatest = &slice[i];
+            }
+        }
+        Extrema { greatest, least }
+    }
+
+    let a = [0, -3, 0, 15, 48];
+    let e = find_extrema(&a);
+    assert_eq!(*e.least, -3);
+    assert_eq!(*e.greatest, 48);
+
+    // 9.8
+    // #[derive(Copy, Clone, Debug, PartialEq)]
+    // struct Point {
+    //     x: f64,
+    //     y: f64,
+    // }
+
+    // 9.9
+
+    // pub struct SpiderRobot {
+    //     species: String,
+    //     web_enabled: bool,
+    //     log_device: [fd::FileDesc; 8],
+    //     ...
+    // }
+
+    // use std::rc::Rc;
+    // pub struct SpiderSenses {
+    //     robot: Rc<SpiderRobot>, /// <-- pointer to settings and I/O
+    //     eyes: [Camera; 32],
+    //     motion: Accelerometer,
+    //     ...
+    // }
+
+    use std::cell::Cell;
+    use std::cell::RefCell;
+    use std::fs::File;
+
+    pub struct SpiderRobot {
+        hardware_error_count: Cell<u32>,
+        log_file: RefCell<File>,
+    }
+
+    impl SpiderRobot {
+        /// Increase the error count by 1.
+        pub fn add_hardware_error(&self) {
+            let n = self.hardware_error_count.get();
+            self.hardware_error_count.set(n + 1);
+        }
+
+        /// True if any hardware errors have been reported.
+        pub fn has_hardware_errors(&self) -> bool {
+            self.hardware_error_count.get() > 0
+        }
+
+        /// Write a line to the log file.
+        pub fn log(&self, message: &str) {
+            let mut file = self.log_file.borrow_mut();
+            // writeln!(file, "{}", message).unwrap();
+        }
+    }
+
+    let ref_cell: RefCell<String> = RefCell::new("hello".to_string());
+
+    let r = ref_cell.borrow(); // ok, return a Ref<String>
+    let count = r.len(); // ok, returns "hello".len()
+    assert_eq!(count, 5);
+
+    // let mut w = ref_cell.borrow_mut(); // panic: already borrowed
+    // w.push_str(" world");
+}
+
+#[test]
+fn enum_test() {
+    // enum Ordering {
+    //     Less,
+    //     Equal,
+    //     Greater / 2.0
+    // }
+
+    use std::cmp::Ordering;
+
+    fn compare(n: i32, m: i32) -> Ordering {
+        if n < m {
+            Ordering::Less
+        } else if n > m {
+            Ordering::Greater
+        } else {
+            Ordering::Equal
+        }
+    }
+    // use std::cmp::Ordering::*;
+
+    // fn compare(n: i32, m: i32) -> Ordering {
+    //     if n < m {
+    //         Less
+    //     } else if n > m {
+    //         Greater
+    //     } else {
+    //         Equal
+    //     }
+    // }
+
+    // enum Pet {
+    //     Orca,
+    //     Giraffe,
+    // }
+
+    // use self::Pet::*;
+
+    #[derive(Debug, PartialEq)]
+    enum HttpStatus {
+        Ok = 200,
+        NotModified = 304,
+        NotFound = 404,
+    }
+
+    use std::mem::size_of;
+    assert_eq!(size_of::<Ordering>(), 1);
+    assert_eq!(size_of::<HttpStatus>(), 2); // 404 doesn't fit in a u8
+
+    assert_eq!(HttpStatus::Ok as i32, 200);
+
+    fn http_status_from_u32(n: u32) -> Option<HttpStatus> {
+        match n {
+            200 => Some(HttpStatus::Ok),
+            304 => Some(HttpStatus::NotModified),
+            404 => Some(HttpStatus::NotFound),
+            _ => None,
+        }
+    }
+
+    let status = http_status_from_u32(404).unwrap();
+    // assert_eq!(status as i32, 404);
+    assert_eq!(status, HttpStatus::NotFound);
+
+    #[derive(Copy, Clone, Debug, PartialEq)]
+    enum TimeUnit {
+        Seconds,
+        Minutes,
+        Hours,
+        Days,
+        Months,
+        Years,
+    }
+
+    impl TimeUnit {
+        /// Return the plural noun for this time unit.
+        fn plural(self) -> &'static str {
+            match self {
+                TimeUnit::Seconds => "seconds",
+                TimeUnit::Minutes => "minutes",
+                TimeUnit::Hours => "hours",
+                TimeUnit::Days => "days",
+                TimeUnit::Months => "months",
+                TimeUnit::Years => "years",
+            }
+        }
+        /// Return the singular noun for this time unit.
+        fn singular(self) -> &'static str {
+            self.plural().trim_right_matches('s')
+        }
+    }
+
+    /// A timestamp that has been deliberately rounded off, so our program
+    /// says "6 monthes ago" instead of "February 9, 2016, at 9:49 AM".
+    #[derive(Copy, Clone, Debug, PartialEq)]
+    enum RoughTime {
+        InThePast(TimeUnit, u32),
+        JustNow,
+        InTheFuture(TimeUnit, u32),
+    }
+
+    let four_score_and_seven_years_ago = RoughTime::InThePast(TimeUnit::Years, 4 * 20 + 7);
+
+    let three_hours_from_now = RoughTime::InTheFuture(TimeUnit::Hours, 3);
+
+    struct Point3d(u32, u32, u32);
+    enum Shape {
+        Sphere { center: Point3d, radius: f32 },
+        Cubold { corner1: Point3d, corner2: Point3d },
+    }
+
+    let unit_sphere = Shape::Sphere {
+        center: Point3d(0, 0, 0),
+        radius: 1.0,
+    };
+
+    // enum RelationshipStatus {
+    //     Single,
+    //     InARelationship,
+    //     ItsComplicated(Option<String>),
+    //     ItsExtremelyComplicated {
+    //         car: DifferentialEquation,
+    //         cdr: EarlyModernistPoem
+    //     }
+    // }
+    //
+
+    use std::collections::HashMap;
+    enum Json {
+        Null,
+        Boolean(bool),
+        Number(f64),
+        String(String),
+        Array(Vec<Json>),
+        Object(Box<HashMap<String, Json>>),
+    }
+
+    // An ordered collection of `T`s
+    enum BinaryTree<T> {
+        Empty,
+        NonEmpty(Box<TreeNode<T>>),
+    }
+
+    // A part of a BinaryTree.
+    struct TreeNode<T> {
+        element: T,
+        left: BinaryTree<T>,
+        right: BinaryTree<T>,
+    }
+
+    let jupiter_tree = BinaryTree::NonEmpty(Box::new(TreeNode {
+        element: "Jupiter",
+        left: BinaryTree::Empty,
+        right: BinaryTree::Empty,
+    }));
+    let mercury_tree = BinaryTree::NonEmpty(Box::new(TreeNode {
+        element: "Mercury",
+        left: BinaryTree::Empty,
+        right: BinaryTree::Empty,
+    }));
+    let uranus_tree = BinaryTree::NonEmpty(Box::new(TreeNode {
+        element: "Uranus",
+        left: BinaryTree::Empty,
+        right: BinaryTree::Empty,
+    }));
+    let mars_tree = BinaryTree::NonEmpty(Box::new(TreeNode {
+        element: "Mars",
+        left: jupiter_tree,
+        right: mercury_tree,
+    }));
+    let tree = BinaryTree::NonEmpty(Box::new(TreeNode {
+        element: "Saturn",
+        left: mars_tree,
+        right: uranus_tree,
+    }));
+
+    // let mut tree = BinaryTree::Empty;
+    // for planet in planets {
+    //    tree.add(planet);
+    // }
+
+    // 10.2
+
+    fn rough_time_to_english(rt: RoughTime) -> String {
+        match rt {
+            RoughTime::InThePast(units, count) => format!("{}, {} ago", count, units.plural()),
+            RoughTime::JustNow => format!("just now"),
+            RoughTime::InTheFuture(units, 1) => format!("a {} from now", units.plural()),
+            RoughTime::InTheFuture(units, count) => {
+                format!("{}, {} from now", count, units.plural())
+            }
+        }
+    }
+
+    rough_time_to_english(four_score_and_seven_years_ago);
+
+    // 10.2.1
+
+    // match meadow.count_rabbits() {
+    //     0 => {} // nothing to say
+    //     1 => println!("A rabbit is nosing around inthe clover."),
+    //     n => println!("There are {} rabbits hopping about in the meadow", n)
+    // }
+    //
+    // let calendar =
+    //     match settings.get_string("calendar") {
+    //        "gregorian" => Calendar::Gregorian,
+    //        "chinese" => Calendar::Chinese,
+    //        "ethiopian" => Calendar::Ethiopian,
+    //        other => return parse_error("calendar", other)
+    //     };
+    // let caption =
+    //     match photo.tagged_pet() {
+    //        Pet::Tyrannosaur => "RRRRAAAAAHHHHH",
+    //        Pet::Samoyed => "*dog thoughts*",
+    //        _ => "I'm cute, love me" // generic caption, works for any pet
+    //     }
+    // // there are many Shapes, but we only support "selecting"
+    // // either some text, or everything in a rectangular area.
+    // // You can't select an ellipse or trapezoid.
+    // match document.selection() {
+    //    Shape::TextSpan(start, end) => paint_text_selection(start, end),
+    //    Shape::Rectangle(rect) => paint_rect_selection(rect),
+    //    _ => panic!("unexpected selection type")
+    // }
+    //
+    // fn check_move(current_hex: Hex, click: Point) -> game::Result<Hex> {
+    //    match point_to_hex(click) {
+    //        None =>
+    //            Err("That's not a game space."),
+    //        Some(current_hex) => // try to match if user clicked the current_hex
+    //                             // (if doesn't work)
+    //            Err("You are already there! You must click somewhere else."),
+    //        Some(other_hex) =>
+    //            Ok(other_hex)
+    //    }
+    // }
+    //
+    // fn check_move(current_hex: Hex, click: Point) -> game::Result<Hex> {
+    //    match point_to_hex(click) {
+    //        None =>
+    //            Err("That's not a game space."),
+    //        Some(hex) =>
+    //            if hex == current_hex {
+    //                Err("You are already there! You must click somewhere else."),
+    //            } else {
+    //                Ok(hex)
+    //            }
+    //        Some(other_hex) =>
+    //            Ok(other_hex)
+    //    }
+    // }
+    //
+    // fn describe_point(x: i32, y: i32) -> &'static str {
+    //     use std::cmp::Ordering::*;
+    //     match (x.cmp(&0), y.cmp(&0) {
+    //         (Equal, Equal) -> "at the origin",
+    //         (_, Equal) => "on the x axis",
+    //         (Equal, _) => "on the y axis",
+    //         (Greater, Greater) => "in the first quadrant",
+    //         (Less, Grater) => "in the second quadrant",
+    //         _ => "somewhere else"
+    //     }
+    // }
+    //
+    // match balloon.location {
+    //     Point { x: 0, y: height } =>
+    //        println!("straight up {} meters", height),
+    //     Point { x: x, y: y } =>
+    //        println!("at ({}m, {}m)", x, y);
+    // }
+    //
+    // match get_acount(id) {
+    //    Some(Account { name, language, .. {) =>
+    //        language.show_custom_greeting(name)
+    // }
+    //
+    // 10.2.3
+    //
+    // match account {
+    //    Account { name, language, .. } => {
+    //        ui.greet(&name, &language);
+    //        ui.show_settigs(&account); // error: use of moved value `account`
+    //    }
+    // }
+    // match account {
+    //   Account { ref name, ref language, .. } => {
+    //        ui.greet(name, language);
+    //        ui.show_settings(&account); // ok
+    //   }
+    // }
+    //
+    // match line_result {
+    //     Err(ref err) => log_error(err), // `err` is &Error (shared ref)
+    //     Ok(ref mut line) -> {           // `line` is &mut String (mut ref)
+    //         trim_comments(line);        // modify the String in place
+    //         handle(line);
+    //     }
+    // }
+    //
+    // match sphere.center() {
+    //     &Point3d { x, y, z } => ...
+    // }
+    //
+    // match friend.borrow_car() {
+    //     Some(&Car { engine, .. }) => // error: can't move out of borrow
+    //     ...
+    //     None -> {}
+    // }
+    //
+    // Some(&Car {ref engine, .. }) => // ok, engine is a reference
+    //
+    // match chars.peek() {
+    //     Some(&c) -> println!("coming up: {:?}", c),
+    //     None =-> println!("end of chars")
+    // }
+    //
+    // 10.2.4
+    //
+    // let at_end =
+    //     match chars.peek() {
+    //         Some(&'\r') | Some(&'\n') | None => true,
+    //         _ => false
+    //     };
+    // match next_char {
+    //     '0' ... '9' =>
+    //         self.read_number(),
+    //     'a' ... 'z' | 'A' ... 'Z' =>
+    //         self.read_word(),
+    //     ' ' | '\t' | '\n' =>
+    //         self.skip_whitespace(),
+    //     _ =>
+    //         self.handle_punctuation()
+    // }
+    //
+    // 10.2.5
+    //
+    // match robot.last_known_location() {
+    //     Some(point) if self.distance_to(point) < 10 =>
+    //         short_distance_strategy(point),
+    //     Some(point) ->
+    //         long_distance_strategy(point),
+    //     None ->
+    //         searching_strategy()
+    // }
+    //
+    // 10.2.6
+    //
+    // match self.get_selection() {
+    //     Shape::Rect(top_left, bottom_right) ->
+    //         optimized_paint(&Shape::Rect(top_left, bottom_right)),
+    //     other_shape =>
+    //         paint_outline(other_shape.get_outline()),
+    // }
+    //
+    // rect @ Shape::Rect(..) -> optimized_paint(&rect)
+    //
+    // match chars.next() {
+    //     Some(digit @ '0' ... '9') => read_number(disit, chars),
+    // }
+    //
+    // 10.2.7
+    //
+    // // ...unpack a struct into three new local variables
+    // let Track { album, track_number, title, ..} = song;
+    //
+    // // ...unpack a function argument that's a tuple
+    // fn distance_to((x,y): (f64, f64)) -> f64 { ... }
+    //
+    // // ...iterate over keys and values of a HashMap
+    // for (id, document) in &cache_map {
+    //    println!("Document #{}: {}", id, document.title);
+    // }
+    //
+    // // ...automatically dereference an argument to a closure
+    // // (handy because sometimes other code passes you a reference
+    // // when you'd rather have a copy)
+    // let sum = numbers.fold(0, |a, &num| a + num);
+    //
+    // // ...handle just one enum variant specially
+    // if let RoughTime::InTheFuture(_, _) = user.date_of_birth() {
+    //     user.set_time_traveler(true);
+    // }
+    //
+    // // ...run some code only if a table lookup succeeds
+    // if let Some(document) = cache_map.get(&id) {
+    //     return send_cached_response(document);
+    // }
+    //
+    // // ...repeatedly try something until it succeeds
+    // while let Err(err) = present_cheesy_anti_robot_task() {
+    //     log_robot_attempt(err);
+    //     // let the user try again (it might still be a human)
+    // }
+    //
+    // // ...manually loop over an iterator
+    // while let Some(_) = lines.peek() {
+    //     read_paragraph(&mut lines);
+    // }
+    //
+    // 10.2.8
+
+    impl<T: Ord> BinaryTree<T> {
+        fn add(&mut self, value: T) {
+            match *self {
+                BinaryTree::Empty => {
+                    *self = BinaryTree::NonEmpty(Box::new(TreeNode {
+                        element: value,
+                        left: BinaryTree::Empty,
+                        right: BinaryTree::Empty,
+                    }))
+                }
+                BinaryTree::NonEmpty(ref mut node) => {
+                    if value <= node.element {
+                        node.left.add(value);
+                    } else {
+                        node.right.add(value);
+                    }
+                }
+            }
+        }
+    }
+
+    let mut add_tree = BinaryTree::Empty;
+    add_tree.add("Mercury");
+    add_tree.add("Venus");
 }

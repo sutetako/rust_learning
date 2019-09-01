@@ -896,7 +896,6 @@ fn test_expression() {
 
         // Recursively sort the front half of `slice`.
         quicksort(&mut slice[.. pivot_index]);
-
         // And the back half.
         quicksort(&mut slice[pivot_index + 1 ..]);
     }
@@ -1805,4 +1804,173 @@ fn enum_test() {
     let mut add_tree = BinaryTree::Empty;
     add_tree.add("Mercury");
     add_tree.add("Venus");
+}
+
+#[test]
+fn trait_test() {
+    {
+        use std::io::Write;
+
+        fn say_hello(out: &mut Write) -> std::io::Result<()> {
+            out.write_all(b"hello world\n")?;
+            out.flush()
+        }
+
+        // use std::fs::File;
+
+        // let mut local_file = File::create("hello.txt");
+        // say_hello(&mut local_file).expect("error"); // could not work, now
+
+        let mut bytes = vec![];
+        say_hello(&mut bytes).expect("error"); // works
+        assert_eq!(bytes, b"hello world\n");
+
+        // 11.1
+
+        let mut buf: Vec<u8> = vec![];
+        buf.write_all(b"hello").expect("error");
+    }
+    // 11.1.1
+
+    {
+        use std::io::Write;
+
+        let mut buf: Vec<u8> = vec![];
+        // let writer: Write = buf; // error: `Write` does not have a constant size
+        let writer: &mut Write = &mut buf; // ok
+        writer.write_all(b"hello").expect("error");
+        assert_eq!(buf, b"hello");
+    }
+
+    // 11.1.3
+    {
+        use std::io::Write;
+        fn say_hello<W: Write>(out: &mut W) -> std::io::Result<()> {
+            out.write_all(b"hello world\n")?;
+            out.flush()
+        }
+        let mut buf: Vec<u8> = vec![];
+        buf.write_all(b"hello").expect("error");
+        buf::<Vec>.write_all(b"hello").expect("error");
+
+        // let v1 = (0 .. 1000).collect(); // error: can't infer type
+        let v2 = (0..1000).collect::<Vec<i32>>(); // ok
+
+        // /// Run a query on large, partitioned data set.
+        // /// See <http://research.google.com/archive/mapreduce.html>.
+        // fn run_query<M: Mapper + Serialize, R: Reducer + Serialize>(data: &dataSet, map: M, reduce: R) -> Results {
+        // }
+        //
+        // fun run_query<M, R>(data: &Dataset, map: M, reduce: R) -> Results
+        //     where M: Mapper + Serialize,
+        //           R: Reducer + Serialize
+        // {}
+
+        // fn nearest<'t, 'c, P>(target: &'t P, candidates: &'c [P]) -> &'c P
+        //     where P: MeasureDistance
+        // {}
+        //
+        // impl PancakeStack {
+        //    fn Push<:T Topping>(&mut self, goop: T) - PancakeResult<()> {
+        //    }
+        // }
+        // type PancakeResult<T> = Result<T, PancakeError>;
+    }
+    {
+        // struct Broom {
+        //     name: String,
+        //     height: u32,
+        //     health: u32,
+        //     position: (f32, f32, f32),
+        //     intent: BroomIntent,
+        // }
+        // impl Broom {
+        //     fn boomstick_range(&self) -> Range<i32> {
+        //         self.y - self.height - 1 .. self.y
+        //     }
+        // }
+        // trait Visible {
+        //     fn draw(&self, canvas: &mut Canvas);
+        //     fn hit_test(&self, x: i32, y: i32) -> bool;
+        // }
+        // impl Visible for Broom {
+        //     fn draw(&self, canvas: &mut Canvas) {
+        //         //for y in self.y - self.height - 1 .. self.y {
+        //         for y in self.broomstick_range() {
+        //             canvas.write_at(self.x, y, '|');
+        //         }
+        //         canvas.write_at(self.x, y, 'M');
+        //     }
+        // }
+
+        // fn hit_test(&self, x: i32, y:i32) -> bool {
+        //     self.x == x
+        //         && self.y - self.height - 1 <= y
+        //         && y <- self.y
+        // }
+
+    }
+    {
+        // 11.2.1
+
+        /// A writer that ignores whatever data you write to it.
+        pub struct Sink;
+
+        use std::io::{Result, Write};
+
+        impl Write for Sink {
+            fn write(&mut self, buf: &[u8]) -> Result<usize> {
+                Ok(buf.len())
+            }
+            fn flush(&mut self) -> Result<()> {
+                Ok(())
+            }
+        }
+    }
+    {
+        // 11.2.2
+
+        trait IsEmoji {
+            fn is_emoji(&self) -> bool;
+        }
+
+        impl IsEmoji for char {
+            fn is_emoji(&self) -> bool {
+                return false;
+            }
+        }
+        assert_eq!('$'.is_emoji(), false);
+
+        use std::io::{self, Write};
+
+        struct HtmlDocument;
+
+        trait WriteHtml {
+            fn write_html(&mut self, html: &HtmlDocument) -> std::io::Result<()>;
+        }
+
+        impl<W: Write> WriteHtml for W {
+            fn write_html(&mut self, html: &HtmlDocument) -> io::Result<()> {
+                Ok(())
+            }
+        }
+
+        extern crate serde;
+        use serde::Serialize;
+        use serde_json;
+        use std::collections::HashMap;
+        use std::fs::File;
+
+        pub fn save_configuration(config: &HashMap<String, String>) -> std::io::Result<()> {
+            let writer = File::create("test.json").expect("error");
+            let mut serializer = serde_json::Serializer::new(writer);
+
+            config.serialize(&mut serializer).expect("error");
+            Ok(())
+        }
+
+        {
+            // 11.2.3
+        }
+    }
 }

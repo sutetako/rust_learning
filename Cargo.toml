@@ -5,3 +5,5 @@ authors = ["Moto Endo <endo.moto.biz@gmail.com"]
 edition = "2018"
 
 [dependencies]
+serde = "*"
+serde_json = "*"
